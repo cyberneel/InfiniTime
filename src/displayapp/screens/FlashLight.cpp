@@ -31,7 +31,7 @@ namespace {
 }
 
 FlashLight::FlashLight(System::SystemTask& systemTask, Controllers::BrightnessController& brightnessController)
-  : systemTask {systemTask}, brightnessController {brightnessController} {
+  : wakeLock(systemTask), brightnessController {brightnessController} {
 
   previousBrightnessLevel = brightnessController.Level();
   brightnessController.Set(Controllers::BrightnessController::Levels::Low);
@@ -81,14 +81,13 @@ FlashLight::FlashLight(System::SystemTask& systemTask, Controllers::BrightnessCo
   // backgroundAction->user_data = this;
   // lv_obj_set_event_cb(backgroundAction, EventHandler);
 
-  systemTask.PushMessage(Pinetime::System::Messages::DisableSleeping);
+  wakeLock.Lock();
 }
 
 FlashLight::~FlashLight() {
   lv_obj_clean(lv_scr_act());
   lv_obj_set_style_local_bg_color(lv_scr_act(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
   brightnessController.Set(previousBrightnessLevel);
-  systemTask.PushMessage(Pinetime::System::Messages::EnableSleeping);
 }
 
 // void FlashLight::SetFlashlightColor(lv_color_t color) {
