@@ -1,8 +1,8 @@
 {
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "cmake.configureArgs": [
-        "-DARM_NONE_EABI_TOOLCHAIN_PATH=${env:TOOLS_DIR}/${env:GCC_ARM_PATH}",
-        "-DNRF5_SDK_PATH=${env:TOOLS_DIR}/${env:NRF_SDK_VER}",
+        "-DARM_NONE_EABI_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi-10.3-2021.10",
+        "-DNRF5_SDK_PATH=/opt/nRF5_SDK_15.3.0_59ac345",
     ],
     "cmake.statusbar.advanced": {
         "launch": {
