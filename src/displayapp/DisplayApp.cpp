@@ -45,6 +45,7 @@
 #include "displayapp/screens/settings/SettingWeatherFormat.h"
 #include "displayapp/screens/settings/SettingWakeUp.h"
 #include "displayapp/screens/settings/SettingDisplay.h"
+#include "displayapp/screens/settings/SettingHeartRate.h"
 #include "displayapp/screens/settings/SettingSteps.h"
 #include "displayapp/screens/settings/SettingSetDateTime.h"
 #include "displayapp/screens/settings/SettingChimes.h"
@@ -584,6 +585,9 @@ void DisplayApp::LoadScreen(Apps app, DisplayApp::FullRefreshDirections directio
       break;
     case Apps::SettingDisplay:
       currentScreen = std::make_unique<Screens::SettingDisplay>(settingsController);
+      break;
+    case Apps::SettingHeartRate:
+      currentScreen = std::make_unique<Screens::SettingHeartRate>(settingsController);
       break;
     case Apps::SettingSteps:
       currentScreen = std::make_unique<Screens::SettingSteps>(settingsController);

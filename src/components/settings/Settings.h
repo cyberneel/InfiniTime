@@ -50,6 +50,17 @@ namespace Pinetime {
         int colorIndex = 0;
       };
 
+      enum class HeartRateBackgroundMeasurementInterval : uint8_t {
+        Off,
+        Continuous,
+        FifteenSeconds,
+        ThirtySeconds,
+        OneMinute,
+        FiveMinutes,
+        TenMinutes,
+        ThirtyMinutes,
+      };
+
       Settings(Pinetime::Controllers::FS& fs);
 
       Settings(const Settings&) = delete;
@@ -298,10 +309,21 @@ namespace Pinetime {
         return bleRadioEnabled;
       };
 
+      HeartRateBackgroundMeasurementInterval GetHeartRateBackgroundMeasurementInterval() const {
+        return settings.heartRateBackgroundMeasurementInterval;
+      }
+
+      void SetHeartRateBackgroundMeasurementInterval(HeartRateBackgroundMeasurementInterval newHeartRateBackgroundMeasurementInterval) {
+        if (newHeartRateBackgroundMeasurementInterval != settings.heartRateBackgroundMeasurementInterval) {
+          settingsChanged = true;
+        }
+        settings.heartRateBackgroundMeasurementInterval = newHeartRateBackgroundMeasurementInterval;
+      }
+
     private:
       Pinetime::Controllers::FS& fs;
 
-      static constexpr uint32_t settingsVersion = 0x0008;
+      static constexpr uint32_t settingsVersion = 0x0009;
 
       struct SettingsData {
         uint32_t version = settingsVersion;
@@ -313,6 +335,8 @@ namespace Pinetime {
         ClockType clockType = ClockType::H24;
         WeatherFormat weatherFormat = WeatherFormat::Metric;
         Notification notificationStatus = Notification::On;
+
+        HeartRateBackgroundMeasurementInterval heartRateBackgroundMeasurementInterval = HeartRateBackgroundMeasurementInterval::Off;
 
         Pinetime::Applications::WatchFace watchFace = Pinetime::Applications::WatchFace::Digital;
         ChimesOption chimesOption = ChimesOption::None;
