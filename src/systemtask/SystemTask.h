@@ -53,7 +53,7 @@ namespace Pinetime {
   namespace System {
     class SystemTask {
     public:
-      enum class SystemTaskState { Sleeping, Running, GoingToSleep };
+      enum class SystemTaskState { Sleeping, Running, GoingToSleep, AODSleeping };
       SystemTask(Drivers::SpiMaster& spi,
                  Pinetime::Drivers::SpiNorFlash& spiNorFlash,
                  Drivers::TwiMaster& twiMaster,
@@ -78,8 +78,6 @@ namespace Pinetime {
 
       void Start();
       void PushMessage(Messages msg);
-
-      void OnTouchEvent();
 
       bool IsSleepDisabled() {
         return wakeLocksHeld > 0;
