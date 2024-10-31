@@ -240,6 +240,10 @@ void SystemTask::Work() {
           GoToRunning();
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::WakeAlarmTriggered);
           break;
+        case Messages::SetOffGradualWake:
+          GoToRunning();
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::GradualWakeTriggered);
+          break;
         case Messages::BleConnected:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
           isBleDiscoveryTimerRunning = true;
