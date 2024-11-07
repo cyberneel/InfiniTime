@@ -373,6 +373,9 @@ void SystemTask::Work() {
             nimbleController.DisableRadio();
           }
           break;
+        case Messages::SleepTrackerUpdate:
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::SleepTrackerUpdate);
+          break;
         default:
           break;
       }
