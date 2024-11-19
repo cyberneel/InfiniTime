@@ -60,7 +60,9 @@ void InfiniSleepController::DisableTracker() {
 void InfiniSleepController::UpdateTracker() {
   NRF_LOG_INFO("[InfiniSleepController] Updating tracker");
 
-  UpdateBPM();
+  if (infiniSleepSettings.heartRateTracking) {
+    UpdateBPM();
+  }
   systemTask->PushMessage(System::Messages::SleepTrackerUpdate);
 
   xTimerStop(trackerUpdateTimer, 0);
@@ -100,6 +102,7 @@ void InfiniSleepController::ScheduleWakeAlarm() {
     pushesLeftToStopWakeAlarm = PSUHES_TO_STOP_ALARM;
 
     gradualWakeStep = 9;
+    gradualWakeVibration = 9;
 
     auto now = dateTimeController.CurrentDateTime();
     wakeAlarmTime = now;
