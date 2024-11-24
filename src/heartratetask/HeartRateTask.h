@@ -20,20 +20,9 @@ namespace Pinetime {
   namespace Applications {
     class HeartRateTask {
     public:
-      enum class Messages : uint8_t {
-        GoToSleep,
-        WakeUp,
-        StartMeasurement,
-        StopMeasurement
-      };
+      enum class Messages : uint8_t { GoToSleep, WakeUp, StartMeasurement, StopMeasurement };
 
-      enum class States {
-        ScreenOnAndStopped,
-        ScreenOnAndMeasuring,
-        ScreenOffAndStopped,
-        ScreenOffAndWaiting,
-        ScreenOffAndMeasuring
-      };
+      enum class States { ScreenOnAndStopped, ScreenOnAndMeasuring, ScreenOffAndStopped, ScreenOffAndWaiting, ScreenOffAndMeasuring };
 
       explicit HeartRateTask(Drivers::Hrs3300& heartRateSensor,
                              Controllers::HeartRateController& controller,

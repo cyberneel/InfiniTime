@@ -21,7 +21,7 @@ namespace Pinetime {
         void Toggle();
         void ToggleColor(lv_color_t color);
 
-        //void SetFlashlightColor(lv_color_t color);
+        // void SetFlashlightColor(lv_color_t color);
 
       private:
         void SetIndicators();

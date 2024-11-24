@@ -16,7 +16,7 @@ namespace {
   void WhiteButtonEventHandler(lv_obj_t* obj, lv_event_t event) {
     if (event == LV_EVENT_CLICKED) {
       auto* screen = static_cast<FlashLight*>(obj->user_data);
-      //screen->SetFlashlightColor(LV_COLOR_WHITE);
+      // screen->SetFlashlightColor(LV_COLOR_WHITE);
       screen->ToggleColor(LV_COLOR_WHITE);
     }
   }
@@ -24,7 +24,7 @@ namespace {
   void RedButtonEventHandler(lv_obj_t* obj, lv_event_t event) {
     if (event == LV_EVENT_CLICKED) {
       auto* screen = static_cast<FlashLight*>(obj->user_data);
-      //screen->SetFlashlightColor(LV_COLOR_RED);
+      // screen->SetFlashlightColor(LV_COLOR_RED);
       screen->ToggleColor(LV_COLOR_RED);
     }
   }
@@ -96,7 +96,7 @@ FlashLight::~FlashLight() {
 //   if (flashLight) {
 //     lv_color_t blackColor = LV_COLOR_BLACK;
 //     lv_color_t whiteColor = LV_COLOR_WHITE;
-//     lv_obj_set_style_local_text_color(flashLight, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, 
+//     lv_obj_set_style_local_text_color(flashLight, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT,
 //       (color.full == whiteColor.full) ? blackColor : whiteColor);
 //   }
 // }
@@ -131,7 +131,7 @@ void FlashLight::SetIndicators() {
 
 void FlashLight::ToggleColor(lv_color_t color) {
   isOn = !isOn;
-  
+
   lv_color_t bgColor = isOn ? color : LV_COLOR_BLACK;
   lv_color_t fgColor = (color.full == LV_COLOR_WHITE.full || !isOn) ? Colors::lightGray : LV_COLOR_BLACK;
 

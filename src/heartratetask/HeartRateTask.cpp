@@ -17,7 +17,6 @@ TickType_t CurrentTaskDelay(HeartRateTask::States state, TickType_t ppgDeltaTms)
   }
 }
 
-
 HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor,
                              Controllers::HeartRateController& controller,
                              Controllers::Settings& settings)
@@ -204,15 +203,15 @@ void HeartRateTask::HandleSensorData(int* lastBpm) {
 
   if (state == States::ScreenOnAndMeasuring || IsContinuousModeActivated()) {
     return;
-  } 
+  }
 
-  // state == States::ScreenOffAndMeasuring 
+  // state == States::ScreenOffAndMeasuring
   //    (because state != ScreenOnAndMeasuring and the only state that enables measuring is ScreenOffAndMeasuring)
   // !IsContinuousModeActivated()
 
   if (ShouldStartBackgroundMeasuring()) {
-    // This doesn't change the state but resets the measurment timer, which basically starts the next measurment without resetting the sensor.
-    // This is basically a fall back to continuous mode, when measurments take too long.
+    // This doesn't change the state but resets the measurment timer, which basically starts the next measurment without resetting the
+    // sensor. This is basically a fall back to continuous mode, when measurments take too long.
     measurementStart = xTaskGetTickCount();
     return;
   }
@@ -223,7 +222,6 @@ void HeartRateTask::HandleSensorData(int* lastBpm) {
     state = States::ScreenOffAndWaiting;
     StopMeasurement();
   }
-
 }
 
 TickType_t HeartRateTask::GetHeartRateBackgroundMeasurementIntervalInTicks() {
