@@ -409,6 +409,8 @@ void DisplayApp::Refresh() {
         }
         motorController.RunForDuration(infiniSleepController.gradualWakeVibrationDurations[-1 + infiniSleepController.gradualWakeStep]);
 
+        infiniSleepController.UpdateGradualWake();
+
         NRF_LOG_INFO("Gradual wake triggered");
 
         break;
