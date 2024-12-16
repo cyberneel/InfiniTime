@@ -7,6 +7,7 @@
 #include "components/fs/FS.h"
 #include "components/heartrate/HeartRateController.h"
 #include "components/alarm/AlarmController.h"
+#include "components/ble/SleepDataService.h"
 
 #include <chrono>
 
@@ -196,6 +197,7 @@ namespace Pinetime {
 
           prevSessionData.totalSleepMinutes = endTotalMinutes - startTotalMinutes;
 
+          sleepDataService->OnNewSleepDataValue(prevSessionData);
           SavePrevSessionData();
           DisableTracker();
         } else {
@@ -235,6 +237,10 @@ namespace Pinetime {
         return brightnessController;
       }
 
+      void SetService(SleepDataService* service) {
+        sleepDataService = service;
+      }
+
     private:
       bool isAlerting = false;
       bool isGradualWakeAlerting = false;
@@ -260,6 +266,8 @@ namespace Pinetime {
       void SaveSettingsToFile() const;
       void LoadPrevSessionData();
       void SavePrevSessionData() const;
+
+      SleepDataService* sleepDataService = nullptr;
 
       // For File IO
       // void WriteDataCSV(const char* fileName, const std::tuple<int, int, int, int, int>* data, int dataSize) const;

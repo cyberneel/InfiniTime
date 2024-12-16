@@ -117,8 +117,8 @@ namespace Pinetime {
       Pinetime::Controllers::FS& fs;
       Pinetime::Controllers::TouchHandler& touchHandler;
       Pinetime::Controllers::ButtonHandler& buttonHandler;
-      Pinetime::Controllers::NimbleController nimbleController;
       Pinetime::Controllers::InfiniSleepController& infiniSleepController;
+      Pinetime::Controllers::NimbleController nimbleController;
 
       static void Process(void* instance);
       void Work();
