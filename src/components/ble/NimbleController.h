@@ -23,6 +23,7 @@
 #include "components/ble/MotionService.h"
 #include "components/ble/SimpleWeatherService.h"
 #include "components/fs/FS.h"
+#include "components/ble/SleepDataService.h"
 
 namespace Pinetime {
   namespace Drivers {
@@ -49,7 +50,8 @@ namespace Pinetime {
                        Pinetime::Drivers::SpiNorFlash& spiNorFlash,
                        HeartRateController& heartRateController,
                        MotionController& motionController,
-                       FS& fs);
+                       FS& fs,
+                       InfiniSleepController& infiniSleepController);
       void Init();
       void StartAdvertising();
       int OnGAPEvent(ble_gap_event* event);
@@ -91,6 +93,7 @@ namespace Pinetime {
       DateTime& dateTimeController;
       Pinetime::Drivers::SpiNorFlash& spiNorFlash;
       FS& fs;
+      InfiniSleepController& infiniSleepController;
       DfuService dfuService;
 
       DeviceInformationService deviceInformationService;
@@ -106,6 +109,7 @@ namespace Pinetime {
       HeartRateService heartRateService;
       MotionService motionService;
       FSService fsService;
+      SleepDataService sleepDataService;
       ServiceDiscovery serviceDiscovery;
 
       uint8_t addrType;
