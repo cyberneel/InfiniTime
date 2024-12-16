@@ -73,6 +73,7 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
     fs {fs},
     touchHandler {touchHandler},
     buttonHandler {buttonHandler},
+    infiniSleepController {infiniSleepController},
     nimbleController(*this,
                      bleController,
                      dateTimeController,
@@ -81,8 +82,8 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
                      spiNorFlash,
                      heartRateController,
                      motionController,
-                     fs),
-    infiniSleepController {infiniSleepController} {
+                     fs,
+                     infiniSleepController) {
 }
 
 void SystemTask::Start() {
