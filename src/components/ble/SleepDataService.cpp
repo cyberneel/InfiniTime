@@ -50,10 +50,10 @@ int SleepDataService::OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_ac
     NRF_LOG_INFO("Sleep Data : handle = %d", sleepDataInfoHandle);
 
     InfiniSleepControllerTypes::SessionData *sessionData = &(infiniSleepController.prevSessionData);
-    // [0] = flags, [1] = start month, [2] = start day, [3] = start year - 2020, [4] = start hour, [5] = start minute, [6] = end hour, [7] = end minute
-    uint8_t buffer[8] = {0, sessionData->month, sessionData->day, static_cast<uint8_t>(sessionData->year-2020), sessionData->startTimeHours, sessionData->startTimeMinutes, sessionData->endTimeHours, sessionData->endTimeMinutes};
+    // [0] = flags, [1] = start month, [2] = start day, [3] = start year, [4] = total sleep minutes, [5] = start hour, [6] = start minute
+    uint16_t buffer[7] = {0, sessionData->month, sessionData->day, sessionData->year, sessionData->totalSleepMinutes, sessionData->startTimeHours, sessionData->startTimeMinutes};
 
-    int res = os_mbuf_append(context->om, buffer, 8);
+    int res = os_mbuf_append(context->om, buffer, 7);
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   }
   return 0;
@@ -63,9 +63,9 @@ void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionDa
   if (!sleepDataInfoNotificationEnable)
     return;
 
-  // [0] = flags, [1] = start month, [2] = start day, [3] = start year - 2020, [4] = start hour, [5] = start minute, [6] = end hour, [7] = end minute
-  uint8_t buffer[8] = {0, sessionData.month, sessionData.day, static_cast<uint8_t>(sessionData.year-2020), sessionData.startTimeHours, sessionData.startTimeMinutes, sessionData.endTimeHours, sessionData.endTimeMinutes};
-  auto* om = ble_hs_mbuf_from_flat(buffer, 8);
+  // [0] = flags, [1] = start month, [2] = start day, [3] = start year, [4] = total sleep minutes, [5] = start hour, [6] = start minute
+  uint16_t buffer[7] = {0, sessionData.month, sessionData.day, sessionData.year, sessionData.totalSleepMinutes, sessionData.startTimeHours, sessionData.startTimeMinutes};
+  auto* om = ble_hs_mbuf_from_flat(buffer, 7);
 
   uint16_t connectionHandle = nimble.connHandle();
 
