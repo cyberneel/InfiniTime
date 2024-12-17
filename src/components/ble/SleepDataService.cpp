@@ -63,9 +63,21 @@ void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionDa
   if (!sleepDataInfoNotificationEnable)
     return;
 
-  // [0] = flags, [1] = start month, [2] = start day, [3] = start year, [4] = total sleep minutes, [5] = start hour, [6] = start minute
-  uint16_t buffer[7] = {0, sessionData.month, sessionData.day, sessionData.year, sessionData.totalSleepMinutes, sessionData.startTimeHours, sessionData.startTimeMinutes};
-  auto* om = ble_hs_mbuf_from_flat(buffer, 7);
+  uint32_t timestamp = 1672531199; // Dummy timestamp
+  uint16_t minutesAsleep = sessionData.totalSleepMinutes;
+
+  // [0...3] = timestamp, [4...5] = total minutes
+  uint8_t buffer[6];
+  
+  buffer[0] = (timestamp >> 24) & 0xFF;
+  buffer[1] = (timestamp >> 16) & 0xFF;
+  buffer[2] = (timestamp >> 8) & 0xFF;
+  buffer[3] = timestamp & 0xFF;
+
+  buffer[4] = (minutesAsleep >> 8) & 0xFF;
+  buffer[5] = minutesAsleep & 0xFF;
+
+  auto* om = ble_hs_mbuf_from_flat(buffer, 6);
 
   uint16_t connectionHandle = nimble.connHandle();
 
