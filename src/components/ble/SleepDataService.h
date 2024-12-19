@@ -29,6 +29,8 @@ namespace Pinetime {
       static constexpr ble_uuid16_t sleepDataServiceUuid {.u {.type = BLE_UUID_TYPE_16}, .value = sleepDataServiceId};
 
     private:
+      uint32_t GetTimestamp(InfiniSleepControllerTypes::SessionData &sessionData);
+
       NimbleController& nimble;
       Controllers::InfiniSleepController& infiniSleepController;
       static constexpr uint16_t sleepDataInfoId {0x2037};

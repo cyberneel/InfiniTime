@@ -49,11 +49,21 @@ int SleepDataService::OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_ac
   if (attributeHandle == sleepDataInfoHandle) {
     NRF_LOG_INFO("Sleep Data : handle = %d", sleepDataInfoHandle);
 
-    InfiniSleepControllerTypes::SessionData *sessionData = &(infiniSleepController.prevSessionData);
-    // [0] = flags, [1] = start month, [2] = start day, [3] = start year, [4] = total sleep minutes, [5] = start hour, [6] = start minute
-    uint16_t buffer[7] = {0, sessionData->month, sessionData->day, sessionData->year, sessionData->totalSleepMinutes, sessionData->startTimeHours, sessionData->startTimeMinutes};
+    uint32_t timestamp = GetTimestamp(infiniSleepController.prevSessionData); // Dummy timestamp
+    uint16_t minutesAsleep = infiniSleepController.prevSessionData.totalSleepMinutes;
+    
+    // [0...3] = timestamp, [4...5] = total minutes
+    uint8_t buffer[6];
+    
+    buffer[0] = (timestamp >> 24) & 0xFF;
+    buffer[1] = (timestamp >> 16) & 0xFF;
+    buffer[2] = (timestamp >> 8) & 0xFF;
+    buffer[3] = timestamp & 0xFF;
 
-    int res = os_mbuf_append(context->om, buffer, 7);
+    buffer[4] = (minutesAsleep >> 8) & 0xFF;
+    buffer[5] = minutesAsleep & 0xFF;
+
+    int res = os_mbuf_append(context->om, buffer, 6);
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   }
   return 0;
@@ -63,7 +73,7 @@ void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionDa
   if (!sleepDataInfoNotificationEnable)
     return;
 
-  uint32_t timestamp = 1672531199; // Dummy timestamp
+  uint32_t timestamp = GetTimestamp(sessionData); // Dummy timestamp
   uint16_t minutesAsleep = sessionData.totalSleepMinutes;
 
   // [0...3] = timestamp, [4...5] = total minutes
@@ -96,4 +106,16 @@ void SleepDataService::SubscribeNotification(uint16_t attributeHandle) {
 void SleepDataService::UnsubscribeNotification(uint16_t attributeHandle) {
   if (attributeHandle == sleepDataInfoHandle)
     sleepDataInfoNotificationEnable = false;
+}
+
+uint32_t SleepDataService::GetTimestamp(InfiniSleepControllerTypes::SessionData &sessionData) {
+  struct tm timeinfo = {};
+  timeinfo.tm_year = sessionData.year - 1900; // tm_year is years since 1900
+  timeinfo.tm_mon = sessionData.month - 1;    // tm_mon is 0-based
+  timeinfo.tm_mday = sessionData.day;
+  timeinfo.tm_hour = sessionData.startTimeHours;
+  timeinfo.tm_min = sessionData.startTimeMinutes;
+  timeinfo.tm_sec = 0;
+
+  return mktime(&timeinfo);
 }
