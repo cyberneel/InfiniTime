@@ -73,7 +73,7 @@ void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionDa
   if (!sleepDataInfoNotificationEnable)
     return;
 
-  uint32_t timestamp = GetTimestamp(sessionData); // Dummy timestamp
+  uint32_t timestamp = GetTimestamp(sessionData);
   uint16_t minutesAsleep = sessionData.totalSleepMinutes;
 
   // [0...3] = timestamp, [4...5] = total minutes
