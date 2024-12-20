@@ -2,6 +2,7 @@
 #include "components/ble/SleepDataService.h"
 #include "components/ble/NimbleController.h"
 #include <nrf_log.h>
+#include <ctime>
 
 using namespace Pinetime::Controllers;
 
@@ -16,9 +17,10 @@ namespace {
 }
 
 // TODO Refactoring - remove dependency to SystemTask
-SleepDataService::SleepDataService(NimbleController& nimble, InfiniSleepController& infiniSleepController)
+SleepDataService::SleepDataService(NimbleController& nimble, InfiniSleepController& infiniSleepController, Controllers::DateTime& dateTimeController)
   : nimble {nimble},
     infiniSleepController {infiniSleepController},
+    dateTimeController {dateTimeController},
     characteristicDefinition {{.uuid = &sleepDataInfoUuid.u,
                                .access_cb = SleepDataServiceCallback,
                                .arg = this,
@@ -49,7 +51,7 @@ int SleepDataService::OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_ac
   if (attributeHandle == sleepDataInfoHandle) {
     NRF_LOG_INFO("Sleep Data : handle = %d", sleepDataInfoHandle);
 
-    uint32_t timestamp = GetTimestamp(infiniSleepController.prevSessionData); // Dummy timestamp
+    uint32_t timestamp = GetTimestamp(infiniSleepController.prevSessionData);
     uint16_t minutesAsleep = infiniSleepController.prevSessionData.totalSleepMinutes;
     
     // [0...3] = timestamp, [4...5] = total minutes
@@ -108,14 +110,10 @@ void SleepDataService::UnsubscribeNotification(uint16_t attributeHandle) {
     sleepDataInfoNotificationEnable = false;
 }
 
-uint32_t SleepDataService::GetTimestamp(InfiniSleepControllerTypes::SessionData &sessionData) {
-  struct tm timeinfo = {};
-  timeinfo.tm_year = sessionData.year - 1900; // tm_year is years since 1900
-  timeinfo.tm_mon = sessionData.month - 1;    // tm_mon is 0-based
-  timeinfo.tm_mday = sessionData.day;
-  timeinfo.tm_hour = sessionData.startTimeHours;
-  timeinfo.tm_min = sessionData.startTimeMinutes;
-  timeinfo.tm_sec = 0;
-
-  return mktime(&timeinfo);
+uint32_t SleepDataService::GetTimestamp(InfiniSleepControllerTypes::SessionData& sessionData) {
+  auto now = dateTimeController.CurrentDateTime().time_since_epoch();
+  auto sleepDuration = std::chrono::minutes(sessionData.totalSleepMinutes);
+  // Add 5 hours to convert from EST to UTC (hardcoded for now)
+  auto utcOffset = std::chrono::hours(5);
+  return std::chrono::duration_cast<std::chrono::seconds>(now + utcOffset - sleepDuration).count();
 }

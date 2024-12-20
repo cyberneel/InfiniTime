@@ -51,7 +51,7 @@ NimbleController::NimbleController(Pinetime::System::SystemTask& systemTask,
     heartRateService {*this, heartRateController},
     motionService {*this, motionController},
     fsService {systemTask, fs},
-    sleepDataService {*this, infiniSleepController},
+    sleepDataService {*this, infiniSleepController, dateTimeController},
     serviceDiscovery({&currentTimeClient, &alertNotificationClient}) {
 }
 

@@ -10,6 +10,7 @@ namespace Pinetime {
   namespace Controllers {
     class InfiniSleepController;
     class NimbleController;
+    class DateTime;
 
     namespace InfiniSleepControllerTypes {
       struct SessionData; // Forward declaration of the nested type
@@ -17,7 +18,7 @@ namespace Pinetime {
 
     class SleepDataService {
     public:
-      SleepDataService(NimbleController& nimble, Controllers::InfiniSleepController& infininiSleepController);
+      SleepDataService(NimbleController& nimble, Controllers::InfiniSleepController& infiniSleepController, Controllers::DateTime& dateTimeController);
       void Init();
       int OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context);
       void OnNewSleepDataValue(InfiniSleepControllerTypes::SessionData &sessionData);
@@ -33,6 +34,7 @@ namespace Pinetime {
 
       NimbleController& nimble;
       Controllers::InfiniSleepController& infiniSleepController;
+      Controllers::DateTime& dateTimeController;
       static constexpr uint16_t sleepDataInfoId {0x2037};
 
       static constexpr ble_uuid16_t sleepDataInfoUuid {.u {.type = BLE_UUID_TYPE_16}, .value = sleepDataInfoId};
