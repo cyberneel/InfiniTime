@@ -18,10 +18,12 @@ namespace Pinetime {
 
     class SleepDataService {
     public:
-      SleepDataService(NimbleController& nimble, Controllers::InfiniSleepController& infiniSleepController, Controllers::DateTime& dateTimeController);
+      SleepDataService(NimbleController& nimble,
+                       Controllers::InfiniSleepController& infiniSleepController,
+                       Controllers::DateTime& dateTimeController);
       void Init();
       int OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context);
-      void OnNewSleepDataValue(InfiniSleepControllerTypes::SessionData &sessionData);
+      void OnNewSleepDataValue(InfiniSleepControllerTypes::SessionData& sessionData);
 
       void SubscribeNotification(uint16_t attributeHandle);
       void UnsubscribeNotification(uint16_t attributeHandle);
@@ -30,8 +32,6 @@ namespace Pinetime {
       static constexpr ble_uuid16_t sleepDataServiceUuid {.u {.type = BLE_UUID_TYPE_16}, .value = sleepDataServiceId};
 
     private:
-      uint32_t GetTimestamp(InfiniSleepControllerTypes::SessionData &sessionData);
-
       NimbleController& nimble;
       Controllers::InfiniSleepController& infiniSleepController;
       Controllers::DateTime& dateTimeController;
