@@ -17,7 +17,9 @@ namespace {
 }
 
 // TODO Refactoring - remove dependency to SystemTask
-SleepDataService::SleepDataService(NimbleController& nimble, InfiniSleepController& infiniSleepController, Controllers::DateTime& dateTimeController)
+SleepDataService::SleepDataService(NimbleController& nimble,
+                                   InfiniSleepController& infiniSleepController,
+                                   Controllers::DateTime& dateTimeController)
   : nimble {nimble},
     infiniSleepController {infiniSleepController},
     dateTimeController {dateTimeController},
@@ -51,12 +53,12 @@ int SleepDataService::OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_ac
   if (attributeHandle == sleepDataInfoHandle) {
     NRF_LOG_INFO("Sleep Data : handle = %d", sleepDataInfoHandle);
 
-    uint32_t timestamp = GetTimestamp(infiniSleepController.prevSessionData);
+    uint32_t timestamp = infiniSleepController.prevSessionData.startTimeStamp;
     uint16_t minutesAsleep = infiniSleepController.prevSessionData.totalSleepMinutes;
-    
+
     // [0...3] = timestamp, [4...5] = total minutes
     uint8_t buffer[6];
-    
+
     buffer[0] = (timestamp >> 24) & 0xFF;
     buffer[1] = (timestamp >> 16) & 0xFF;
     buffer[2] = (timestamp >> 8) & 0xFF;
@@ -71,16 +73,16 @@ int SleepDataService::OnSleepDataRequested(uint16_t attributeHandle, ble_gatt_ac
   return 0;
 }
 
-void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionData &sessionData) {
+void SleepDataService::OnNewSleepDataValue(InfiniSleepControllerTypes::SessionData& sessionData) {
   if (!sleepDataInfoNotificationEnable)
     return;
 
-  uint32_t timestamp = GetTimestamp(sessionData);
+  uint32_t timestamp = sessionData.startTimeStamp;
   uint16_t minutesAsleep = sessionData.totalSleepMinutes;
 
   // [0...3] = timestamp, [4...5] = total minutes
   uint8_t buffer[6];
-  
+
   buffer[0] = (timestamp >> 24) & 0xFF;
   buffer[1] = (timestamp >> 16) & 0xFF;
   buffer[2] = (timestamp >> 8) & 0xFF;
@@ -108,12 +110,4 @@ void SleepDataService::SubscribeNotification(uint16_t attributeHandle) {
 void SleepDataService::UnsubscribeNotification(uint16_t attributeHandle) {
   if (attributeHandle == sleepDataInfoHandle)
     sleepDataInfoNotificationEnable = false;
-}
-
-uint32_t SleepDataService::GetTimestamp(InfiniSleepControllerTypes::SessionData& sessionData) {
-  auto now = dateTimeController.CurrentDateTime().time_since_epoch();
-  auto sleepDuration = std::chrono::minutes(sessionData.totalSleepMinutes);
-  // Add 5 hours to convert from EST to UTC (hardcoded for now)
-  auto utcOffset = std::chrono::hours(5);
-  return std::chrono::duration_cast<std::chrono::seconds>(now + utcOffset - sleepDuration).count();
 }
