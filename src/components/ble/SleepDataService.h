@@ -42,7 +42,7 @@ namespace Pinetime {
       struct ble_gatt_chr_def characteristicDefinition[2];
       struct ble_gatt_svc_def serviceDefinition[2];
 
-      uint16_t sleepDataInfoHandle;
+      uint16_t sleepDataInfoHandle = 0;
       std::atomic_bool sleepDataInfoNotificationEnable {false};
     };
   }

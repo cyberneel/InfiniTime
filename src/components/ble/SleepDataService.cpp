@@ -2,7 +2,6 @@
 #include "components/ble/SleepDataService.h"
 #include "components/ble/NimbleController.h"
 #include <nrf_log.h>
-#include <ctime>
 
 using namespace Pinetime::Controllers;
 
