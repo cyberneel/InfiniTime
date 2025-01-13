@@ -452,6 +452,7 @@ list(APPEND SOURCE_FILES
         components/ble/DeviceInformationService.cpp
         components/ble/CurrentTimeClient.cpp
         components/ble/AlertNotificationClient.cpp
+        components/ble/AppleMediaServiceClient.cpp
         components/ble/DfuService.cpp
         components/ble/CurrentTimeService.cpp
         components/ble/AlertNotificationService.cpp
@@ -522,6 +523,7 @@ list(APPEND RECOVERY_SOURCE_FILES
         components/ble/DeviceInformationService.cpp
         components/ble/CurrentTimeClient.cpp
         components/ble/AlertNotificationClient.cpp
+        components/ble/AppleMediaServiceClient.cpp
         components/ble/DfuService.cpp
         components/ble/CurrentTimeService.cpp
         components/ble/AlertNotificationService.cpp
@@ -644,6 +646,7 @@ set(INCLUDE_FILES
         components/ble/DeviceInformationService.h
         components/ble/CurrentTimeClient.h
         components/ble/AlertNotificationClient.h
+        components/ble/AppleMediaServiceClient.h
         components/ble/DfuService.h
         components/firmwarevalidator/FirmwareValidator.h
         components/ble/BatteryInformationService.h
