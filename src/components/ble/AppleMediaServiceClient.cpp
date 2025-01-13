@@ -32,11 +32,6 @@ int NewAlertSubcribeCallback(uint16_t conn_handle, const struct ble_gatt_error* 
   return client->OnNewAlertSubcribe(conn_handle, error, attr);
 }
 
-int OnControlPointWriteCallback(uint16_t conn_handle, const struct ble_gatt_error* error, struct ble_gatt_attr* attr, void* arg) {
-  auto client = static_cast<AppleMediaServiceClient*>(arg);
-  return client->OnControlPointWrite(conn_handle, error, attr);
-}
-
 AppleMediaServiceClient::AppleMediaServiceClient(Pinetime::System::SystemTask& systemTask,
                                                  Pinetime::Controllers::NotificationManager& notificationManager)
   : systemTask {systemTask}, notificationManager {notificationManager} {
@@ -168,6 +163,13 @@ void AppleMediaServiceClient::OnNotification(ble_gap_event* event) {
   }
 }
 
+void AppleMediaServiceClient::Command(Commands command) {
+  if (isRemoteCommandCharacteristicDiscovered) {
+    uint8_t value[1] {static_cast<uint8_t>(command)};
+    ble_gattc_write_flat(systemTask.nimble().connHandle(), remoteCommandHandle, value, sizeof(value), nullptr, this);
+  }
+}
+
 void AppleMediaServiceClient::Reset() {
   amsStartHandle = {0};
   amsEndHandle = {0};
@@ -187,7 +189,7 @@ void AppleMediaServiceClient::Reset() {
 }
 
 void AppleMediaServiceClient::Discover(uint16_t connectionHandle, std::function<void(uint16_t)> onServiceDiscovered) {
-  NRF_LOG_INFO("[ANCS] Starting discovery");
+  NRF_LOG_INFO("[AMS] Starting discovery");
   // DebugNotification("[ANCS] Starting discovery");
   this->onServiceDiscovered = onServiceDiscovered;
   ble_gattc_disc_svc_by_uuid(connectionHandle, &amsUuid.u, OnDiscoveryEventCallback, this);

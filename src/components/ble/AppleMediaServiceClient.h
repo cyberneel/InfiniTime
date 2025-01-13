@@ -37,7 +37,18 @@ namespace Pinetime {
       void Reset();
       void Discover(uint16_t connectionHandle, std::function<void(uint16_t)> lambda) override;
 
-      void AppleMediaServiceClient::DebugNotification(const char* msg) const;
+      void DebugNotification(const char* msg) const;
+
+      enum class Commands : uint8_t {
+        Play = 0,
+        Pause = 1,
+        Next = 3,
+        Previous = 4,
+        VolumeUp = 5,
+        VolumeDown = 6
+      };
+
+      void Command(Commands command);
 
       std::string getArtist() const{
         return artist;
@@ -58,7 +69,7 @@ namespace Pinetime {
         return playbackSpeed;
       };
       bool isPlaying() const {
-        return isPlaying;
+        return playing;
       };
 
       // 89D3502B-0F36-433A-8EF4-C502AD55F8DC
@@ -86,7 +97,7 @@ namespace Pinetime {
       int progress;
       int trackLength;
       float playbackSpeed;
-      bool isPlaying;
+      bool playing;
 
       uint16_t amsStartHandle {0};
       uint16_t amsEndHandle {0};
