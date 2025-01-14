@@ -18,6 +18,7 @@
 #include "components/ble/HeartRateService.h"
 #include "components/ble/ImmediateAlertService.h"
 #include "components/ble/MusicService.h"
+#include "components/ble/AppleMediaServiceClient.h"
 #include "components/ble/NavigationService.h"
 #include "components/ble/ServiceDiscovery.h"
 #include "components/ble/MotionService.h"
@@ -71,6 +72,10 @@ namespace Pinetime {
         return weatherService;
       };
 
+      Pinetime::Controllers::AppleMediaServiceClient& ams() {
+        return amsClient;
+      }
+
       uint16_t connHandle();
       void NotifyBatteryLevel(uint8_t level);
 
@@ -106,6 +111,7 @@ namespace Pinetime {
       HeartRateService heartRateService;
       MotionService motionService;
       FSService fsService;
+      AppleMediaServiceClient amsClient;
       ServiceDiscovery serviceDiscovery;
 
       uint8_t addrType;

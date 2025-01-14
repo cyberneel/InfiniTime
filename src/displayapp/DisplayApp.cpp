@@ -718,6 +718,10 @@ void DisplayApp::Register(Pinetime::Controllers::NavigationService* NavigationSe
   this->controllers.navigationService = NavigationService;
 }
 
+void DisplayApp::Register(Pinetime::Controllers::AppleMediaServiceClient* amsClient) {
+  this->controllers.amsClient = amsClient;
+}
+
 void DisplayApp::ApplyBrightness() {
   auto brightness = settingsController.GetBrightness();
   if (brightness != Controllers::BrightnessController::Levels::Low && brightness != Controllers::BrightnessController::Levels::Medium &&
