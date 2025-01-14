@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "components/ble/NotificationManager.h"
 #include "systemtask/SystemTask.h"
+#include <string.h>
 
 using namespace Pinetime::Controllers;
 
@@ -121,10 +122,24 @@ int AppleMediaServiceClient::OnDescriptorDiscoveryEventCallback(uint16_t connect
       }
     } else if (characteristicValueHandle == entityUpdateHandle && ble_uuid_cmp(&entityUpdateChar.u, &descriptor->uuid.u)) {
       if (entityUpdateDescriptorHandle == 0) {
-        NRF_LOG_INFO("ANCS Descriptor discovered : %d", descriptor->handle);
+        NRF_LOG_INFO("AMS Descriptor discovered : %d", descriptor->handle);
         // DebugNotification("AMS Descriptor discovered");
         entityUpdateDescriptorHandle = descriptor->handle;
         isEntityUpdateDescriptorFound = true;
+        uint8_t value[2] {1, 0};
+        ble_gattc_write_flat(connectionHandle, entityUpdateDescriptorHandle, value, sizeof(value), NewAlertSubcribeCallback, this);
+        // Playback Info
+        value[0] = 0;
+        value[1] = 1;
+        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value, sizeof(value), nullptr, this);
+        // Track Info
+        uint8_t value2[5];
+        value2[0] = 2;
+        value2[1] = 0;
+        value2[2] = 1;
+        value2[3] = 2;
+        value2[4] = 3;
+        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value2, sizeof(value2), nullptr, this);
       }
     }
   } else {
@@ -160,7 +175,76 @@ void AppleMediaServiceClient::OnNotification(ble_gap_event* event) {
 
   } else if (event->notify_rx.attr_handle == entityUpdateHandle || event->notify_rx.attr_handle == entityUpdateDescriptorHandle) {
     NRF_LOG_INFO("AMS Notification received");
+
+    uint8_t entityID = 0;
+    uint8_t attributeID = 0;
+    uint8_t entityUpdateFlags = 0;
+
+    // Check what the entity is
+    os_mbuf_copydata(event->notify_rx.om, 0, 1, &entityID);
+
+    switch (entityID) {
+      case 0:
+        // Player entity
+        os_mbuf_copydata(event->notify_rx.om, 1, 1, &attributeID);
+        if (attributeID == 1) {
+          os_mbuf_copydata(event->notify_rx.om, 2, 1, &entityUpdateFlags);
+          uint32_t playebackInfo;
+          os_mbuf_copydata(event->notify_rx.om, 3, event->notify_rx.om->om_len - 3, &playebackInfo);
+          DecodePlaybackInfo(playebackInfo);
+        }
+        break;
+
+      case 2:
+        // Track entity
+        os_mbuf_copydata(event->notify_rx.om, 1, 1, &attributeID);
+        if (attributeID == 0) {
+          // Artist utf-8
+          uint32_t artist;
+          os_mbuf_copydata(event->notify_rx.om, 2, event->notify_rx.om->om_len - 2, &artist);
+          this->artist = std::string(reinterpret_cast<char*>(&artist));
+        } else if (attributeID == 1) {
+          // Album utf-8
+          uint32_t album;
+          os_mbuf_copydata(event->notify_rx.om, 2, event->notify_rx.om->om_len - 2, &album);
+          this->album = std::string(reinterpret_cast<char*>(&album));
+        } else if (attributeID == 2) {
+          // Title utf-8
+          uint32_t title;
+          os_mbuf_copydata(event->notify_rx.om, 2, event->notify_rx.om->om_len - 2, &title);
+          this->track = std::string(reinterpret_cast<char*>(&title));
+        } else if (attributeID == 3) {
+          // Duration in seconds string
+          uint32_t duration;
+          os_mbuf_copydata(event->notify_rx.om, 2, event->notify_rx.om->om_len - 2, &duration);
+          this->trackLength = std::stof(reinterpret_cast<char*>(duration));
+        }
+        break;
+
+      default:
+        break;
+    }
   }
+}
+
+void AppleMediaServiceClient::DecodePlaybackInfo(uint32_t playbackInfo) {
+    // Convert uint32_t to string
+    char str[12]; // Enough to hold the string representation of uint32_t
+    snprintf(str, sizeof(str), "%lu", playbackInfo);
+
+    // Extract the values
+
+    // Playback state
+    std::string string = str;
+    playing =  string.substr(0, string.find(",")) == "1";
+
+    // Playback rate
+    string = string.substr(string.find(",") + 1);
+    playbackSpeed = std::stof(string.substr(0, string.find(",")));
+
+    // Elapsed time
+    string = string.substr(string.find(",") + 1);
+    progress = std::stof(string.substr(0, string.find(",")));
 }
 
 void AppleMediaServiceClient::Command(Commands command) {
