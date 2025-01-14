@@ -20,6 +20,7 @@
 #include <cstdint>
 #include "displayapp/DisplayApp.h"
 #include "components/ble/MusicService.h"
+#include "components/ble/AppleMediaServiceClient.h"
 #include "displayapp/icons/music/disc.c"
 #include "displayapp/icons/music/disc_f_1.c"
 #include "displayapp/icons/music/disc_f_2.c"
@@ -151,32 +152,62 @@ Music::~Music() {
 }
 
 void Music::Refresh() {
-  if (artist != musicService.getArtist()) {
-    artist = musicService.getArtist();
-    lv_label_set_text(txtArtist, artist.data());
-  }
+  if (amsClient.isDiscovered) {
+    if (artist != amsClient.getArtist()) {
+      artist = amsClient.getArtist();
+      lv_label_set_text(txtArtist, artist.data());
+    }
 
-  if (track != musicService.getTrack()) {
-    track = musicService.getTrack();
-    lv_label_set_text(txtTrack, track.data());
-  }
+    if (track != amsClient.getTrack()) {
+      track = amsClient.getTrack();
+      lv_label_set_text(txtTrack, track.data());
+    }
 
-  if (album != musicService.getAlbum()) {
-    album = musicService.getAlbum();
-  }
+    if (album != amsClient.getAlbum()) {
+      album = amsClient.getAlbum();
+    }
 
-  if (playing != musicService.isPlaying()) {
-    playing = musicService.isPlaying();
-  }
+    if (playing != amsClient.isPlaying()) {
+      playing = amsClient.isPlaying();
+    }
 
-  if (currentPosition != musicService.getProgress()) {
-    currentPosition = musicService.getProgress();
-    UpdateLength();
-  }
+    if (currentPosition != amsClient.getProgress()) {
+      currentPosition = amsClient.getProgress();
+      UpdateLength();
+    }
 
-  if (totalLength != musicService.getTrackLength()) {
-    totalLength = musicService.getTrackLength();
-    UpdateLength();
+    if (totalLength != amsClient.getTrackLength()) {
+      totalLength = amsClient.getTrackLength();
+      UpdateLength();
+    }
+  } else {
+    if (artist != musicService.getArtist()) {
+      artist = musicService.getArtist();
+      lv_label_set_text(txtArtist, artist.data());
+    }
+
+    if (track != musicService.getTrack()) {
+      track = musicService.getTrack();
+      lv_label_set_text(txtTrack, track.data());
+    }
+
+    if (album != musicService.getAlbum()) {
+      album = musicService.getAlbum();
+    }
+
+    if (playing != musicService.isPlaying()) {
+      playing = musicService.isPlaying();
+    }
+
+    if (currentPosition != musicService.getProgress()) {
+      currentPosition = musicService.getProgress();
+      UpdateLength();
+    }
+
+    if (totalLength != musicService.getTrackLength()) {
+      totalLength = musicService.getTrackLength();
+      UpdateLength();
+    }
   }
 
   if (playing) {
@@ -225,26 +256,50 @@ void Music::UpdateLength() {
 void Music::OnObjectEvent(lv_obj_t* obj, lv_event_t event) {
   if (event == LV_EVENT_CLICKED) {
     if (obj == btnVolDown) {
-      musicService.event(Controllers::MusicService::EVENT_MUSIC_VOLDOWN);
+      if (amsClient.isDiscovered) {
+        amsClient.Command(Controllers::AppleMediaServiceClient::Commands::VolumeDown);
+      } else {
+        musicService.event(Controllers::MusicService::EVENT_MUSIC_VOLDOWN);
+      }
     } else if (obj == btnVolUp) {
-      musicService.event(Controllers::MusicService::EVENT_MUSIC_VOLUP);
+      if (amsClient.isDiscovered) {
+        amsClient.Command(Controllers::AppleMediaServiceClient::Commands::VolumeUp);
+      } else {
+        musicService.event(Controllers::MusicService::EVENT_MUSIC_VOLUP);
+      }
     } else if (obj == btnPrev) {
-      musicService.event(Controllers::MusicService::EVENT_MUSIC_PREV);
+      if (amsClient.isDiscovered) {
+        amsClient.Command(Controllers::AppleMediaServiceClient::Commands::Previous);
+      } else {
+        musicService.event(Controllers::MusicService::EVENT_MUSIC_PREV);
+      }
     } else if (obj == btnPlayPause) {
       if (playing == Pinetime::Controllers::MusicService::MusicStatus::Playing) {
-        musicService.event(Controllers::MusicService::EVENT_MUSIC_PAUSE);
+        if (amsClient.isDiscovered) {
+          amsClient.Command(Controllers::AppleMediaServiceClient::Commands::Pause);
+        } else {
+          musicService.event(Controllers::MusicService::EVENT_MUSIC_PAUSE);
+        }
 
         // Let's assume it stops playing instantly
         playing = Controllers::MusicService::NotPlaying;
       } else {
-        musicService.event(Controllers::MusicService::EVENT_MUSIC_PLAY);
+        if (amsClient.isDiscovered) {
+          amsClient.Command(Controllers::AppleMediaServiceClient::Commands::Play);
+        } else {
+          musicService.event(Controllers::MusicService::EVENT_MUSIC_PLAY);
+        }
 
         // Let's assume it starts playing instantly
         // TODO: In the future should check for BT connection for better UX
         playing = Controllers::MusicService::Playing;
       }
     } else if (obj == btnNext) {
-      musicService.event(Controllers::MusicService::EVENT_MUSIC_NEXT);
+      if (amsClient.isDiscovered) {
+        amsClient.Command(Controllers::AppleMediaServiceClient::Commands::Next);
+      } else {
+        musicService.event(Controllers::MusicService::EVENT_MUSIC_NEXT);
+      }
     }
   }
 }

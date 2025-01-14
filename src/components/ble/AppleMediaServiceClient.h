@@ -48,6 +48,7 @@ namespace Pinetime {
         VolumeDown = 6
       };
 
+      void DecodePlaybackInfo(uint32_t playbackInfo);
       void Command(Commands command);
 
       std::string getArtist() const{
@@ -76,6 +77,8 @@ namespace Pinetime {
       static constexpr ble_uuid128_t amsUuid {
         .u {.type = BLE_UUID_TYPE_128},
         .value = {0xDC, 0xF8, 0x55, 0xAD, 0x02, 0xC5, 0xF4, 0x8E, 0x3A, 0x43, 0x36, 0x0F, 0x2B, 0x50, 0xD3, 0x89}};
+
+      bool isDiscovered {false};
 
     private:
       // 9B3C81D8-57B1-4A8A-B8DF-0E56F7CA51C2
@@ -108,7 +111,7 @@ namespace Pinetime {
       uint16_t entityUpdateDescriptorHandle {0};
       uint16_t entityAttributeDescriptorHandle {0};
 
-      bool isDiscovered {false};
+      
       bool isRemoteCommandCharacteristicDiscovered {false};
       bool isRemoteCommandDescriptorFound {false};
       bool isEntityUpdateCharacteristicDiscovered {false};
