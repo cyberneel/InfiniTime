@@ -237,8 +237,13 @@ void SystemTask::Work() {
           break;
         case Messages::BleConnected:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::NotifyDeviceActivity);
-          isBleDiscoveryTimerRunning = true;
-          bleDiscoveryTimer = 5;
+          hasBleDiscoveryStartedForConnection = false;
+          break;
+        case Messages::BleStartDiscovery:
+          if (!hasBleDiscoveryStartedForConnection) {
+            hasBleDiscoveryStartedForConnection = true;
+            nimbleController.StartDiscovery();
+          }
           break;
         case Messages::BleFirmwareUpdateStarted:
           GoToRunning();
@@ -380,16 +385,6 @@ void SystemTask::Work() {
     elapsed = xTaskGetTickCount() - lastStateUpdate;
     if (elapsed >= stateUpdatePeriod) {
       UpdateMotion();
-      if (isBleDiscoveryTimerRunning) {
-        if (bleDiscoveryTimer == 0) {
-          isBleDiscoveryTimerRunning = false;
-          // Services discovery is deferred from 3 seconds to avoid the conflicts between the host communicating with the
-          // target and vice-versa. I'm not sure if this is the right way to handle this...
-          nimbleController.StartDiscovery();
-        } else {
-          bleDiscoveryTimer--;
-        }
-      }
       monitor.Process();
       NoInit_BackUpTime = dateTimeController.CurrentDateTime();
       if (nrf_gpio_pin_read(PinMap::Button) == 0) {

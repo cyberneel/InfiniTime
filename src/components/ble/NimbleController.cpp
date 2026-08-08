@@ -140,11 +140,9 @@ void NimbleController::Init() {
 void NimbleController::StartAdvertising() {
   struct ble_gap_adv_params adv_params;
   struct ble_hs_adv_fields fields;
-  struct ble_hs_adv_fields rsp_fields;
 
   memset(&adv_params, 0, sizeof(adv_params));
   memset(&fields, 0, sizeof(fields));
-  memset(&rsp_fields, 0, sizeof(rsp_fields));
 
   adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
   adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
@@ -162,21 +160,32 @@ void NimbleController::StartAdvertising() {
   fields.uuids16 = &HeartRateService::heartRateServiceUuid;
   fields.num_uuids16 = 1;
   fields.uuids16_is_complete = 1;
-  const ble_uuid128_t uuids128[2] = {DfuService::serviceUuid, AppleNotificationCenterClient::ancsUuid};
-  fields.uuids128 = uuids128;
-  fields.num_uuids128 = 2;
+  fields.uuids128 = &DfuService::serviceUuid;
+  fields.num_uuids128 = 1;
   fields.uuids128_is_complete = 1;
   fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
 
-  rsp_fields.name = reinterpret_cast<const uint8_t*>(deviceName);
-  rsp_fields.name_len = strlen(deviceName);
-  rsp_fields.name_is_complete = 1;
+  const auto deviceNameLength = strlen(deviceName);
+  const auto* deviceNameBytes = reinterpret_cast<const uint8_t*>(deviceName);
+  uint8_t scanResponseData[31] {};
+  size_t scanResponseDataLength = 0;
+
+  scanResponseData[scanResponseDataLength++] = static_cast<uint8_t>(deviceNameLength + 1);
+  scanResponseData[scanResponseDataLength++] = BLE_HS_ADV_TYPE_COMP_NAME;
+  memcpy(&scanResponseData[scanResponseDataLength], deviceNameBytes, deviceNameLength);
+  scanResponseDataLength += deviceNameLength;
+
+  // ANCS is provided by iOS; advertise it as a solicited service instead of a local service UUID.
+  scanResponseData[scanResponseDataLength++] = 17;
+  scanResponseData[scanResponseDataLength++] = BLE_HS_ADV_TYPE_SOL_UUIDS128;
+  memcpy(&scanResponseData[scanResponseDataLength], AppleNotificationCenterClient::ancsUuid.value, sizeof(AppleNotificationCenterClient::ancsUuid.value));
+  scanResponseDataLength += sizeof(AppleNotificationCenterClient::ancsUuid.value);
 
   int rc;
   rc = ble_gap_adv_set_fields(&fields);
   ASSERT(rc == 0);
 
-  rc = ble_gap_adv_rsp_set_fields(&rsp_fields);
+  rc = ble_gap_adv_rsp_set_data(scanResponseData, scanResponseDataLength);
   ASSERT(rc == 0);
 
   rc = ble_gap_adv_start(addrType, NULL, 2000, &adv_params, GAPEventCallback, this);
@@ -269,6 +278,10 @@ int NimbleController::OnGAPEvent(ble_gap_event* event) {
                      desc.sec_state.authenticated,
                      desc.sec_state.bonded,
                      desc.sec_state.key_size);
+
+        if (desc.sec_state.encrypted) {
+          systemTask.PushMessage(Pinetime::System::Messages::BleStartDiscovery);
+        }
       }
       break;
 
