@@ -42,6 +42,7 @@ namespace Pinetime {
       enum class Commands : uint8_t {
         Play = 0,
         Pause = 1,
+        TogglePlayPause = 2,
         Next = 3,
         Previous = 4,
         VolumeUp = 5,

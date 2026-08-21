@@ -33,6 +33,19 @@ int NewAlertSubcribeCallback(uint16_t conn_handle, const struct ble_gatt_error* 
   return client->OnNewAlertSubcribe(conn_handle, error, attr);
 }
 
+int OnCommandCallback(uint16_t /*conn_handle*/, const struct ble_gatt_error* error, struct ble_gatt_attr* /*attr*/, void* arg) {
+  auto client = static_cast<AppleMediaServiceClient*>(arg);
+  if (error->status == 0) {
+    NRF_LOG_INFO("AMS Command sent");
+    client->DebugNotification("AMS Command sent");
+    return 0;
+  } else {
+    NRF_LOG_INFO("AMS Command ERROR");
+    client->DebugNotification("AMS Command ERROR");
+    return 1;
+  }
+}
+
 AppleMediaServiceClient::AppleMediaServiceClient(Pinetime::System::SystemTask& systemTask,
                                                  Pinetime::Controllers::NotificationManager& notificationManager)
   : systemTask {systemTask}, notificationManager {notificationManager} {
@@ -73,26 +86,34 @@ int AppleMediaServiceClient::OnCharacteristicsDiscoveryEvent(uint16_t connection
     NRF_LOG_INFO("AMS Characteristic discovery complete");
     if (isRemoteCommandCharacteristicDiscovered) {
       ble_gattc_disc_all_dscs(connectionHandle, remoteCommandHandle, amsEndHandle, OnAMSDescriptorDiscoveryEventCallback, this);
+      // ble_gattc_disc_all_dscs(connectionHandle, amsStartHandle, amsEndHandle, OnAMSDescriptorDiscoveryEventCallback, this);
     }
     if (isEntityUpdateCharacteristicDiscovered) {
-      ble_gattc_disc_all_dscs(connectionHandle, entityUpdateHandle, amsEndHandle, OnAMSDescriptorDiscoveryEventCallback, this);
+      // ble_gattc_disc_all_dscs(connectionHandle, entityUpdateHandle, amsEndHandle+1, OnAMSDescriptorDiscoveryEventCallback, this);
     }
     if (isRemoteCommandCharacteristicDiscovered == isEntityUpdateCharacteristicDiscovered &&
         isRemoteCommandCharacteristicDiscovered == isEntityAttributeCharacteristicDiscovered) {
-      onServiceDiscovered(connectionHandle);
+        onServiceDiscovered(connectionHandle);
     }
   } else {
     if (characteristic != nullptr) {
       if (ble_uuid_cmp(&remoteCommandChar.u, &characteristic->uuid.u) == 0) {
-        NRF_LOG_INFO("AMS Characteristic discovered: Remote Command");
-        DebugNotification("AMS Characteristic discovered: Remote Command");
+        char msg[75];
+        snprintf(msg, sizeof(msg), "AMS Characteristic discovered: Remote Command\n%d", characteristic->val_handle);
+        NRF_LOG_INFO(msg);
+        DebugNotification(msg);
         remoteCommandHandle = characteristic->val_handle;
         isRemoteCommandCharacteristicDiscovered = true;
       } else if (ble_uuid_cmp(&entityUpdateChar.u, &characteristic->uuid.u) == 0) {
-        NRF_LOG_INFO("AMS Characteristic discovered: Entity Update");
-        DebugNotification("AMS Characteristic discovered: Entity Update");
+        char msg[75];
+        snprintf(msg, sizeof(msg), "AMS Characteristic discovered: Entity Update\n%d", characteristic->val_handle);
+        NRF_LOG_INFO(msg);
+        DebugNotification(msg);
         entityUpdateHandle = characteristic->val_handle;
         isEntityUpdateCharacteristicDiscovered = true;
+
+        entityUpdateDescriptorHandle = entityUpdateHandle + 1;
+        isEntityUpdateDescriptorFound = true;
       } else if (ble_uuid_cmp(&entityAttributeChar.u, &characteristic->uuid.u) == 0) {
         char msg[75];
         snprintf(msg, sizeof(msg), "AMS Characteristic discovered: Entity Attribute\n%d", characteristic->val_handle);
@@ -113,17 +134,21 @@ int AppleMediaServiceClient::OnDescriptorDiscoveryEventCallback(uint16_t connect
   if (error->status == 0) {
     if (characteristicValueHandle == remoteCommandHandle && ble_uuid_cmp(&remoteCommandChar.u, &descriptor->uuid.u)) {
       if (remoteCommandDescriptorHandle == 0) {
-        NRF_LOG_INFO("AMS Descriptor discovered : %d", descriptor->handle);
-        // DebugNotification("AMS Descriptor discovered");
+        char msg[55];
+        snprintf(msg, sizeof(msg), "AMS Descriptor discovered : %d", descriptor->handle);
+        NRF_LOG_INFO(msg);
+        DebugNotification(msg);
         remoteCommandDescriptorHandle = descriptor->handle;
         isRemoteCommandDescriptorFound = true;
         uint8_t value[2] {1, 0};
         ble_gattc_write_flat(connectionHandle, remoteCommandDescriptorHandle, value, sizeof(value), NewAlertSubcribeCallback, this);
+
+        // ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value, sizeof(value), NewAlertSubcribeCallback, this);
       }
     } else if (characteristicValueHandle == entityUpdateHandle && ble_uuid_cmp(&entityUpdateChar.u, &descriptor->uuid.u)) {
       if (entityUpdateDescriptorHandle == 0) {
         NRF_LOG_INFO("AMS Descriptor discovered : %d", descriptor->handle);
-        // DebugNotification("AMS Descriptor discovered");
+        DebugNotification("AMS Descriptor discovered");
         entityUpdateDescriptorHandle = descriptor->handle;
         isEntityUpdateDescriptorFound = true;
         uint8_t value[2] {1, 0};
@@ -131,15 +156,15 @@ int AppleMediaServiceClient::OnDescriptorDiscoveryEventCallback(uint16_t connect
         // Playback Info
         value[0] = 0;
         value[1] = 1;
-        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value, sizeof(value), nullptr, this);
+        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value, sizeof(value), OnCommandCallback, this);
         // Track Info
-        uint8_t value2[5];
+        BYTE value2[5];
         value2[0] = 2;
         value2[1] = 0;
         value2[2] = 1;
         value2[3] = 2;
         value2[4] = 3;
-        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value2, sizeof(value2), nullptr, this);
+        ble_gattc_write_flat(connectionHandle, entityUpdateHandle, value2, sizeof(value2), OnCommandCallback, this);
       }
     }
   } else {
@@ -172,13 +197,15 @@ int AppleMediaServiceClient::OnNewAlertSubcribe(uint16_t connectionHandle, const
 void AppleMediaServiceClient::OnNotification(ble_gap_event* event) {
   if (event->notify_rx.attr_handle == remoteCommandHandle || event->notify_rx.attr_handle == remoteCommandDescriptorHandle) {
     NRF_LOG_INFO("AMS Notification received");
+    DebugNotification("AMS Remote received");
 
   } else if (event->notify_rx.attr_handle == entityUpdateHandle || event->notify_rx.attr_handle == entityUpdateDescriptorHandle) {
     NRF_LOG_INFO("AMS Notification received");
+    DebugNotification("AMS Update received");
 
     uint8_t entityID = 0;
     uint8_t attributeID = 0;
-    uint8_t entityUpdateFlags = 0;
+    uint8_t entityUpdateFlags = 0; 
 
     // Check what the entity is
     os_mbuf_copydata(event->notify_rx.om, 0, 1, &entityID);
@@ -236,6 +263,7 @@ void AppleMediaServiceClient::DecodePlaybackInfo(uint32_t playbackInfo) {
 
     // Playback state
     std::string string = str;
+    string = reinterpret_cast<char*>(playbackInfo);
     playing =  string.substr(0, string.find(",")) == "1";
 
     // Playback rate
@@ -250,7 +278,7 @@ void AppleMediaServiceClient::DecodePlaybackInfo(uint32_t playbackInfo) {
 void AppleMediaServiceClient::Command(Commands command) {
   if (isRemoteCommandCharacteristicDiscovered) {
     uint8_t value[1] {static_cast<uint8_t>(command)};
-    ble_gattc_write_flat(systemTask.nimble().connHandle(), remoteCommandHandle, value, sizeof(value), nullptr, this);
+    ble_gattc_write_flat(systemTask.nimble().connHandle(), remoteCommandHandle, value, sizeof(value), OnCommandCallback, this);
   }
 }
 
